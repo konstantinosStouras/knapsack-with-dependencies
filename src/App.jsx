@@ -228,6 +228,7 @@ const quitGame = () => {
   const showOptimal = () => {
     if (showOptimalView) {
       setOptimalIds([]);
+      setSelectedIds(prev => prev.filter(id => !optimalIds.includes(id)));
       setOptimalStats(null);
     } else {
       const result = findOptimalSubset(items, similarityThreshold);
