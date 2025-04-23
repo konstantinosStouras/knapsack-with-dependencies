@@ -121,32 +121,32 @@ const getDeviceType = () => {
 sessionStorage.removeItem('sessionId');
 sessionStorage.removeItem('userId');
 
-const generateLogData = (round, projects, selectedIds, similarityThreshold, strategyLogRaw, optimalStatsRaw) => {
+const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLogRaw, optimalStatsRaw) => {
   const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
   const userId = sessionStorage.getItem('userId') || crypto.randomUUID();
   sessionStorage.setItem('sessionId', sessionId);
   sessionStorage.setItem('userId', userId);
 
-  const selectedProjects = projects.filter((project) => selectedIds.includes(project.id));
-  const totalValue = selectedProjects.reduce((sum, p) => sum + p.value, 0);
-  const similarity = averageSimilarity(selectedProjects);
+  const selectedItems = items.filter((project) => selectedIds.includes(project.id));
+  const totalValue = selectedItems.reduce((sum, p) => sum + p.value, 0);
+  const similarity = averageSimilarity(selectedItems);
   const success = similarity >= similarityThreshold;
 
-  const optimalStats = optimalStatsRaw || findOptimalSubset(projects, similarityThreshold);
+  const optimalStats = optimalStatsRaw || findOptimalSubset(items, similarityThreshold);
   const optimalSimilarity = averageSimilarity(optimalStats.subset);
 
-  const strategyLog = selectedProjects.map(project => project.name);
+  const strategyLog = selectedItems.map(item => item.name);
 
   // Collect project-level details
-  const projectData = projects.flatMap((project, idx) => {
+  const itemData = items.flatMap((item, idx) => {
     return {
-      [`Project ${idx + 1} Value`]: project.value,
-      [`Project ${idx + 1} Attributes`]: `[${project.attributes.map(v => v.toFixed(2)).join(', ')}]`,
-      [`Project ${idx + 1} Selected`]: selectedIds.includes(project.id) ? 'Yes' : 'No'
+      [`Project ${idx + 1} Value`]: item.value,
+      [`Project ${idx + 1} Attributes`]: `[${item.attributes.map(v => v.toFixed(2)).join(', ')}]`,
+      [`Project ${idx + 1} Selected`]: selectedIds.includes(item.id) ? 'Yes' : 'No'
     };
   });
 
-  const projectLog = projectData.reduce((acc, val) => ({ ...acc, ...val }), {});
+  const itemLog = itemData.reduce((acc, val) => ({ ...acc, ...val }), {});
 
   return {
     timestamp: new Date().toISOString(),
@@ -160,11 +160,11 @@ const generateLogData = (round, projects, selectedIds, similarityThreshold, stra
     targetSimilarity: similarityThreshold,
     success,
     strategy: strategyLog.join(", "),
-    finalSelection: selectedProjects.map(project => project.name).join(", "),
-    optimalSet: optimalStats.subset.map(project => project.name).join(", "),
+    finalSelection: selectedItems.map(item => item.name).join(", "),
+    optimalSet: optimalStats.subset.map(item => item.name).join(", "),
     optimalValue: optimalStats.value.toString(),
     optimalSimilarity: optimalSimilarity.toFixed(4),
-    ...projectLog
+    ...itemLog
   };
 };
 
@@ -223,27 +223,35 @@ const quitGame = () => {
 
 
 
-  const showOptimal = () => {
-    const result = findOptimalSubset(items, similarityThreshold);
-    const ids = result.subset.map((project) => project.id);
-    setOptimalIds(ids);
-    setSelectedIds(ids);
-    const allSubsets = getAllSubsets(items)
-      .filter(sub => sub.length >= 2)
-      .map(subset => ({
-        names: subset.map(project => project.name).join(', '),
-        value: subset.reduce((sum, project) => sum + project.value, 0),
-        similarity: averageSimilarity(subset),
-        valid: averageSimilarity(subset) >= similarityThreshold
-      }))
-      .sort((a, b) => b.value - a.value);
+  const [showOptimalView, setShowOptimalView] = useState(false);
 
-    setOptimalStats({
-      value: result.value,
-      similarity: averageSimilarity(result.subset),
-      items: result.subset,
-      allSubsets
-    });
+  const showOptimal = () => {
+    if (showOptimalView) {
+      setOptimalIds([]);
+      setOptimalStats(null);
+    } else {
+      const result = findOptimalSubset(items, similarityThreshold);
+      const ids = result.subset.map((project) => project.id);
+      setOptimalIds(ids);
+      setSelectedIds(ids);
+      const allSubsets = getAllSubsets(items)
+        .filter(sub => sub.length >= 2)
+        .map(subset => ({
+          names: subset.map(project => project.name).join(', '),
+          value: subset.reduce((sum, project) => sum + project.value, 0),
+          similarity: averageSimilarity(subset),
+          valid: averageSimilarity(subset) >= similarityThreshold
+        }))
+        .sort((a, b) => b.value - a.value);
+
+      setOptimalStats({
+        value: result.value,
+        similarity: averageSimilarity(result.subset),
+        items: result.subset,
+        allSubsets
+      });
+    }
+    setShowOptimalView(!showOptimalView);
   };
 
   if (quit) {
@@ -295,7 +303,7 @@ return (
       <h1 className="text-center h1 text-primary mb-4">Project Selection with Dependencies</h1>
       <h2 className="h4">Round {round}</h2>
       <p>
-        Select a portfolio of items that maximizes total value,<br />
+        Select a portfolio of projects that maximizes total value,<br />
         subject to: Portfolio Compatibility Score ≥ {similarityThreshold} (range: -1 to 1)
       </p>
 
