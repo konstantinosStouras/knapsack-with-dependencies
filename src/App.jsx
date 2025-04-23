@@ -121,32 +121,32 @@ const getDeviceType = () => {
 sessionStorage.removeItem('sessionId');
 sessionStorage.removeItem('userId');
 
-const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLogRaw, optimalStatsRaw) => {
+const generateLogData = (round, projects, selectedIds, similarityThreshold, strategyLogRaw, optimalStatsRaw) => {
   const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
   const userId = sessionStorage.getItem('userId') || crypto.randomUUID();
   sessionStorage.setItem('sessionId', sessionId);
   sessionStorage.setItem('userId', userId);
 
-  const selectedItems = items.filter((project) => selectedIds.includes(project.id));
-  const totalValue = selectedItems.reduce((sum, p) => sum + p.value, 0);
-  const similarity = averageSimilarity(selectedItems);
+  const selectedProjects = projects.filter((project) => selectedIds.includes(project.id));
+  const totalValue = selectedProjects.reduce((sum, p) => sum + p.value, 0);
+  const similarity = averageSimilarity(selectedProjects);
   const success = similarity >= similarityThreshold;
 
-  const optimalStats = optimalStatsRaw || findOptimalSubset(items, similarityThreshold);
+  const optimalStats = optimalStatsRaw || findOptimalSubset(projects, similarityThreshold);
   const optimalSimilarity = averageSimilarity(optimalStats.subset);
 
-  const strategyLog = selectedItems.map(item => item.name);
+  const strategyLog = selectedProjects.map(project => project.name);
 
-  // Collect item-level details
-  const itemData = items.flatMap((item, idx) => {
+  // Collect project-level details
+  const projectData = projects.flatMap((project, idx) => {
     return {
-      [`Item ${idx + 1} Value`]: item.value,
-      [`Item ${idx + 1} Attributes`]: `[${item.attributes.map(v => v.toFixed(2)).join(', ')}]`,
-      [`Item ${idx + 1} Selected`]: selectedIds.includes(item.id) ? 'Yes' : 'No'
+      [`Project ${idx + 1} Value`]: project.value,
+      [`Project ${idx + 1} Attributes`]: `[${project.attributes.map(v => v.toFixed(2)).join(', ')}]`,
+      [`Project ${idx + 1} Selected`]: selectedIds.includes(project.id) ? 'Yes' : 'No'
     };
   });
 
-  const itemLog = itemData.reduce((acc, val) => ({ ...acc, ...val }), {});
+  const projectLog = projectData.reduce((acc, val) => ({ ...acc, ...val }), {});
 
   return {
     timestamp: new Date().toISOString(),
@@ -160,11 +160,11 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
     targetSimilarity: similarityThreshold,
     success,
     strategy: strategyLog.join(", "),
-    finalSelection: selectedItems.map(item => item.name).join(", "),
-    optimalSet: optimalStats.subset.map(item => item.name).join(", "),
+    finalSelection: selectedProjects.map(project => project.name).join(", "),
+    optimalSet: optimalStats.subset.map(project => project.name).join(", "),
     optimalValue: optimalStats.value.toString(),
     optimalSimilarity: optimalSimilarity.toFixed(4),
-    ...itemLog
+    ...projectLog
   };
 };
 
