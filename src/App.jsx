@@ -135,12 +135,7 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
   const optimalStats = optimalStatsRaw || findOptimalSubset(items, similarityThreshold);
   const optimalSimilarity = averageSimilarity(optimalStats.subset);
 
-  const strategyLog = strategyLogRaw.map(entry => {
-    const match = entry.match(/Project \d+/);
-    if (!match) return entry;
-    const name = match[0];
-    return entry.includes("removed") ? `${name} removed` : `${name} added`;
-  });
+  const strategyLog = selectedItems.map(item => item.name);
 
   // Collect item-level details
   const itemData = items.flatMap((item, idx) => {
