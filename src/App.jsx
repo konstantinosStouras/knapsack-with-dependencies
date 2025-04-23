@@ -117,6 +117,10 @@ const getDeviceType = () => {
   return /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop";
 };
 
+// Reset user and session ID on app load
+sessionStorage.removeItem('sessionId');
+sessionStorage.removeItem('userId');
+
 const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLog, optimalStatsRaw) => {
   const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
   const userId = sessionStorage.getItem('userId') || crypto.randomUUID();
