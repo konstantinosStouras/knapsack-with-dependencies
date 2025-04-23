@@ -29,7 +29,10 @@ This models real-world decision challenges in innovation, investment, or resourc
 
 ## 🖼️ Gameplay Preview
 
-![Gameplay Screenshot](./docs/Screenshot1.png and ./docs/Screenshot2.png)
+<p align="center">
+  <img src="./docs/Screenshot1.png" alt="Gameplay Screenshot 1" width="45%" />
+  <img src="./docs/Screenshot2.png" alt="Gameplay Screenshot 2" width="45%" />
+</p>
 
 ---
 
