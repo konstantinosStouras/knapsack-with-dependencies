@@ -1,4 +1,4 @@
-# 🧠 Project Selection with Dependencies
+# Project Selection with Dependencies
 
 A modern web game designed to explore decision-making in portfolio selection under compatibility constraints. Built with React, Bootstrap, and Vite — and deployed via GitHub Pages and Vercel Proxy logging.
 
