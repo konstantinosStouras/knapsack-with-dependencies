@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   // 💡✅ Always set CORS headers for all requests (not just OPTIONS)
-  res.setHeader("Access-Control-Allow-Origin", "https://www.stouras.com"); // ← You had '*'; this is safer
+  res.setHeader("Access-Control-Allow-Origin", "https://www.stouras.com"); // ← I had '*' earlier but this is safer
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
