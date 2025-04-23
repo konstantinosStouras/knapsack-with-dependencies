@@ -121,7 +121,7 @@ const getDeviceType = () => {
 sessionStorage.removeItem('sessionId');
 sessionStorage.removeItem('userId');
 
-const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLog, optimalStatsRaw) => {
+const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLogRaw, optimalStatsRaw) => {
   const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
   const userId = sessionStorage.getItem('userId') || crypto.randomUUID();
   sessionStorage.setItem('sessionId', sessionId);
@@ -134,6 +134,13 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
 
   const optimalStats = optimalStatsRaw || findOptimalSubset(items, similarityThreshold);
   const optimalSimilarity = averageSimilarity(optimalStats.subset);
+
+  const strategyLog = strategyLogRaw.map(entry => {
+    const match = entry.match(/Project \d+/);
+    if (!match) return entry;
+    const name = match[0];
+    return entry.includes("removed") ? `${name} removed` : `${name} added`;
+  });
 
   // Collect item-level details
   const itemData = items.flatMap((item, idx) => {
@@ -157,7 +164,7 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
     similarity: similarity.toFixed(4),
     targetSimilarity: similarityThreshold,
     success,
-    strategy: strategyLog.join(" | "),
+    strategy: strategyLog.join(", "),
     finalSelection: selectedItems.map(item => item.name).join(", "),
     optimalSet: optimalStats.subset.map(item => item.name).join(", "),
     optimalValue: optimalStats.value.toString(),
