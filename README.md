@@ -1,24 +1,38 @@
-# 🧩 Knapsack Proxy
+# 🧠 Project Selection with Dependencies
 
-A minimal Vercel proxy to bypass CORS and forward data from a React frontend (e.g. stouras.com) to a Google Apps Script Web App.
+A modern web game designed to explore decision-making in portfolio selection under compatibility constraints. Built with React, Bootstrap, and Vite — and deployed via GitHub Pages and Vercel Proxy logging.
 
-## 🛠 Deploy with Vercel
+---
 
-```bash
-vercel deploy --prod
-```
+## 🎮 Gameplay Concept
 
-## 🧪 Test it
+Players must select a subset of items (projects) to maximize total value **while ensuring that their selection meets a minimum portfolio compatibility score** — calculated using **cosine similarity** of hidden attribute vectors.
 
-POST to `/api/submit` with JSON body:
+This models real-world decision challenges in innovation, investment, or resource allocation where value and coherence must be balanced.
 
-```json
-{
-  "round": 1,
-  "selectedItems": [{"id": 1, "value": 2, "weight": 3}],
-  "totalValue": 2,
-  "totalWeight": 3,
-  "risk": 0.2,
-  "visibility": "Daylight"
-}
-```
+---
+
+## 🛠 Technologies Used
+
+- **Frontend:** React + Vite + Bootstrap
+- **Logging:** Vercel Proxy → Google Apps Script → Google Sheets
+- **Deployment:** GitHub Pages
+
+---
+
+## 🧩 Live Game
+
+- 🧩 Game: [Play here](https://konstantinosstouras.github.io/lab/knapsack-with-dependencies)
+- 🔁 Proxy: [https://knapsack-with-dependencies.vercel.app/api/submit](https://knapsack-with-dependencies.vercel.app/api/submit)
+
+---
+
+## 🖼️ Gameplay Preview
+
+![Gameplay Screenshot](./docs/Screenshot1.png and ./docs/Screenshot2.png)
+
+---
+
+## 📚 License
+
+MIT — use freely and credit for educational or experimental purposes.

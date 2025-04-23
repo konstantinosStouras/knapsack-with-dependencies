@@ -151,9 +151,9 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
     targetSimilarity: similarityThreshold,
     success,
     strategy: strategyLog.join(" | "),
-    finalSelection: JSON.stringify(selectedIds),
-    optimalSet: JSON.stringify(optimalStats?.items?.map(i => i.id) || []),
-    optimalValue: optimalStats?.value ?? '',
+    finalSelection: selectedItems.map(item => item.name).join(", "),
+    optimalSet: optimalStats?.items?.map(item => item.name).join(", ") ?? '',
+    optimalValue: optimalStats?.value?.toString() ?? '',
     optimalSimilarity: optimalStats?.similarity?.toFixed(4) ?? '',
     ...itemLog
   };
