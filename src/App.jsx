@@ -117,7 +117,7 @@ const getDeviceType = () => {
   return /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop";
 };
 
-const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLog, optimalStats) => {
+const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLog, optimalStatsRaw) => {
   const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
   const userId = sessionStorage.getItem('userId') || crypto.randomUUID();
   sessionStorage.setItem('sessionId', sessionId);
@@ -127,6 +127,9 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
   const totalValue = selectedItems.reduce((sum, p) => sum + p.value, 0);
   const similarity = averageSimilarity(selectedItems);
   const success = similarity >= similarityThreshold;
+
+  const optimalStats = optimalStatsRaw || findOptimalSubset(items, similarityThreshold);
+  const optimalSimilarity = averageSimilarity(optimalStats.subset);
 
   // Collect item-level details
   const itemData = items.flatMap((item, idx) => {
@@ -152,15 +155,16 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
     success,
     strategy: strategyLog.join(" | "),
     finalSelection: selectedItems.map(item => item.name).join(", "),
-    optimalSet: optimalStats?.items?.map(item => item.name).join(", ") ?? '',
-    optimalValue: optimalStats?.value?.toString() ?? '',
-    optimalSimilarity: optimalStats?.similarity?.toFixed(4) ?? '',
+    optimalSet: optimalStats.subset.map(item => item.name).join(", "),
+    optimalValue: optimalStats.value.toString(),
+    optimalSimilarity: optimalSimilarity.toFixed(4),
     ...itemLog
   };
 };
 
 const nextRound = () => {
-  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimalStats);
+  const optimal = findOptimalSubset(items, similarityThreshold);
+  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimal);
   try {
     fetch('https://knapsack-with-dependencies.vercel.app/api/submit', {
       method: 'POST',
@@ -188,7 +192,8 @@ const nextRound = () => {
 };
 
 const quitGame = () => {
-  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimalStats);
+  const optimal = findOptimalSubset(items, similarityThreshold);
+  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimal);
   try {
     fetch('https://knapsack-with-dependencies.vercel.app/api/submit', {
       method: 'POST',
