@@ -104,130 +104,88 @@ export default function CosineKnapsackGame() {
     });
   };
 
-  const generateLogData = (round) => {
-    const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
-    sessionStorage.setItem('sessionId', sessionId);
+const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLog, optimalStats) => {
+  const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
+  const userId = sessionStorage.getItem('userId') || crypto.randomUUID();
+  sessionStorage.setItem('sessionId', sessionId);
+  sessionStorage.setItem('userId', userId);
 
-    const userId = 'user-' + Math.random().toString(36).substring(2, 12);
-    const selectedProjects = items.filter(p => selectedIds.includes(p.id));
-    const finalSelection = selectedProjects.map(p => p.name).join(", ");
-    const strategy = strategyLog.join(" | ");
-    const totalValue = selectedProjects.reduce((sum, p) => sum + p.value, 0);
-    const similarity = averageSimilarity(selectedProjects);
-    const success = similarity >= similarityThreshold;
-    const optimal = findOptimalSubset(items, similarityThreshold);
-    const optimalSet = optimal.subset.map(p => p.name).join(", ");
-    const optimalValue = optimal.value;
-    const optimalSimilarity = averageSimilarity(optimal.subset);
+  const selectedItems = items.filter((project) => selectedIds.includes(project.id));
+  const totalValue = selectedItems.reduce((sum, p) => sum + p.value, 0);
+  const similarity = averageSimilarity(selectedItems);
+  const success = similarity >= similarityThreshold;
 
-    const itemData = items.flatMap((p, i) => [
-      ["Project " + (i + 1) + " Value", p.value],
-      ["Project " + (i + 1) + " Attributes", p.attributes.map(v => v.toFixed(2)).join("; ")],
-      ["Project " + (i + 1) + " Selected", selectedIds.includes(p.id) ? "Yes" : "No"]
-    ]);
-
-    const structured = Object.fromEntries(itemData);
-
-    return {
-      userId,
-      sessionId,
-      timestamp: new Date().toISOString(),
-      browser: navigator.userAgent || '',
-      device: navigator.platform || '',
-      round,
-      totalValue,
-      similarity: similarity.toFixed(4),
-      targetSimilarity: similarityThreshold,
-      success,
-      strategy,
-      finalSelection,
-      optimalSet,
-      optimalValue,
-      optimalSimilarity: optimalSimilarity.toFixed(4),
-      ...structured
-    };
-  };
-
-  const scriptEndpoint = 'https://script.google.com/macros/s/AKfycbylFl7SQHn53rD8xZiLVIZQJurGr6Y-8VxIPlMUKUuX4WQg-DLaJsBydEL92MLI-tiQ/exec';
-
-  const sendLog = async (logData) => {
-    try {
-      const response = await fetch(scriptEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logData),
-      });
-      const text = await response.text();
-      if (!response.ok) throw new Error(text);
-      console.log('Log success:', text);
-    } catch (err) {
-      console.error('Logging failed:', err.message || err);
-    }
-  };
-
-  const nextRound = () => {
-    const logData = generateLogData(round);
-    sendLog(logData);
-    setHistory((prev) => [...prev, { round, success }]);
-    setRound((prev) => prev + 1);
-    const newRound = generateItemsAndThreshold();
-    setRoundData(newRound);
-    setSelectedIds([]);
-    setOptimalIds([]);
-    setOptimalStats(null);
-    setStrategyLog([]);
-  };
-
-  const quitGame = () => {
-  const sessionId = localStorage.getItem("knapsack_session") || (() => {
-    const id = crypto.randomUUID();
-    localStorage.setItem("knapsack_session", id);
-    return id;
-  })();
-
-  const userId = sessionId;
-
-  const updatedHistory = [...history, { round, success }];
-  setHistory(updatedHistory);
-
-  const summary = updatedHistory.map((r) => {
-    const ua = navigator.userAgent;
-    const match = ua.match(/(Chrome|Firefox|Safari|Edg|OPR|Trident)\/(\\d+\\.\\d+)/);
-    const browser = match ? `${match[1]} ${match[2]}` : "Unknown Browser";
-    return {
-      userId,
-      round: r.round,
-      success: r.success ? 1 : 0,
-      similarityThreshold,
-      totalValue,
-      similarity: similarity.toFixed(4),
-      device:
-        typeof navigator.userAgentData !== "undefined"
-          ? navigator.userAgentData.mobile ? "Mobile" : "Desktop"
-          : /Mobi|Android/i.test(navigator.userAgent)
-          ? "Mobile"
-          : "Desktop",
-      browser
-    };
-  });
-
-  const payload = {
-    sessionId,
+  return {
     timestamp: new Date().toISOString(),
-    summary
+    userId,
+    sessionId,
+    browser: navigator.userAgent || '',
+    device: navigator.platform || '',
+    round,
+    totalValue,
+    similarity: similarity.toFixed(4),
+    targetSimilarity: similarityThreshold,
+    success,
+    strategy: strategyLog.join(" | "),
+    finalSelection: JSON.stringify(selectedIds),
+    optimalSet: JSON.stringify(optimalStats?.items?.map(i => i.id) || []),
+    optimalValue: optimalStats?.value ?? '',
+    optimalSimilarity: optimalStats?.similarity?.toFixed(4) ?? ''
   };
-
-  fetch(scriptEndpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  })
-    .then(() => setQuit(true))
-    .catch((err) => {
-      console.error("Logging to Google Sheets failed:", err);
-      setQuit(true);
-    });
 };
+
+const nextRound = () => {
+  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimalStats);
+  try {
+    fetch('https://knapsack-with-dependencies.vercel.app/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(logData),
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+      })
+      .then(data => console.log('Round log success:', data))
+      .catch(err => console.error('Round logging failed:', err));
+  } catch (error) {
+    console.error('Unexpected error during round logging:', error);
+  }
+
+  setHistory((prev) => [...prev, { round, success }]);
+  setRound((prev) => prev + 1);
+  const newRound = generateItemsAndThreshold();
+  setRoundData(newRound);
+  setSelectedIds([]);
+  setOptimalIds([]);
+  setOptimalStats(null);
+  setStrategyLog([]);
+};
+
+const quitGame = () => {
+  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimalStats);
+  try {
+    fetch('https://knapsack-with-dependencies.vercel.app/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(logData),
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+      })
+      .then(data => console.log('Log success:', data))
+      .catch(err => console.error('Logging failed:', err));
+  } catch (error) {
+    console.error('Unexpected error during logging:', error);
+  }
+
+  setHistory((prev) => [...prev, { round, success }]);
+  setQuit(true);
+  setRound(prev => prev + 1);
+};
+
+
 
   const showOptimal = () => {
     const result = findOptimalSubset(items, similarityThreshold);
@@ -335,10 +293,16 @@ return (
 </p>
 
           <div className="d-flex gap-3 pt-3">
-  <button className="btn btn-success px-4 py-2 fw-semibold shadow-sm rounded-pill" onClick={nextRound}>Next Round</button>
-  <button className="btn btn-outline-danger px-4 py-2 fw-semibold border-2 rounded-pill" onClick={quitGame}>Quit</button>
-  <button className="btn btn-warning text-dark px-4 py-2 fw-semibold shadow-sm rounded-pill" onClick={showOptimal}>Show Optimal</button>
-</div>
+            <button className="btn" style={{ backgroundColor: '#28a745', color: 'white' }} onClick={nextRound}>
+              Next Round
+            </button>
+            <button className="btn" style={{ border: '2px solid #dc3545', color: '#dc3545', backgroundColor: 'white' }} onClick={quitGame}>
+              Quit
+            </button>
+            <button className="btn" style={{ backgroundColor: '#ffc107', color: 'black' }} onClick={showOptimal}>
+              Show Optimal
+            </button>
+          </div>
         </div>
       </div>
       {optimalStats ? (
