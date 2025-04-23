@@ -104,6 +104,19 @@ export default function CosineKnapsackGame() {
     });
   };
 
+const getBrowserInfo = () => {
+  const ua = navigator.userAgent;
+  const match = ua.match(/(Chrome|Firefox|Safari|Edg|OPR|Trident)\/(\d+\.\d+)/);
+  return match ? `${match[1]} ${match[2]}` : "Unknown Browser";
+};
+
+const getDeviceType = () => {
+  if (typeof navigator.userAgentData !== "undefined") {
+    return navigator.userAgentData.mobile ? "Mobile" : "Desktop";
+  }
+  return /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop";
+};
+
 const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLog, optimalStats) => {
   const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
   const userId = sessionStorage.getItem('userId') || crypto.randomUUID();
@@ -115,12 +128,23 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
   const similarity = averageSimilarity(selectedItems);
   const success = similarity >= similarityThreshold;
 
+  // Collect item-level details
+  const itemData = items.flatMap((item, idx) => {
+    return {
+      [`Item ${idx + 1} Value`]: item.value,
+      [`Item ${idx + 1} Attributes`]: `[${item.attributes.map(v => v.toFixed(2)).join(', ')}]`,
+      [`Item ${idx + 1} Selected`]: selectedIds.includes(item.id) ? 'Yes' : 'No'
+    };
+  });
+
+  const itemLog = itemData.reduce((acc, val) => ({ ...acc, ...val }), {});
+
   return {
     timestamp: new Date().toISOString(),
     userId,
     sessionId,
-    browser: navigator.userAgent || '',
-    device: navigator.platform || '',
+    browser: getBrowserInfo(),
+    device: getDeviceType(),
     round,
     totalValue,
     similarity: similarity.toFixed(4),
@@ -130,7 +154,8 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
     finalSelection: JSON.stringify(selectedIds),
     optimalSet: JSON.stringify(optimalStats?.items?.map(i => i.id) || []),
     optimalValue: optimalStats?.value ?? '',
-    optimalSimilarity: optimalStats?.similarity?.toFixed(4) ?? ''
+    optimalSimilarity: optimalStats?.similarity?.toFixed(4) ?? '',
+    ...itemLog
   };
 };
 
