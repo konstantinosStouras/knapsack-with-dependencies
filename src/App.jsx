@@ -56,15 +56,23 @@ const generateItemsAndThreshold = () => {
       attributes: isSimilar && i === Math.min(...similarIndices) ? baseVector : vector,
     };
   });
-  const subsets = getAllSubsets(items);
-  let maxSimWith3 = 0;
+
+//Make sure that for each round the Target Portfolio Compatibility Score is always a random number between [0.88, 0.98]. 
+// This makes the optimal subset to have fewer items and always between 2-5 items (as opposed to all of them being the optimal)
+  const threshold = parseFloat((Math.random() * 0.1 + 0.88).toFixed(4));
+  const subsets = getAllSubsets(items).filter(sub =>
+    sub.length >= 2 && sub.length <= 5 && averageSimilarity(sub) >= threshold
+  );
+
+  let best = { value: 0, subset: [] };
   for (const subset of subsets) {
-    if (subset.length === 3) {
-      const sim = averageSimilarity(subset);
-      if (sim > maxSimWith3) maxSimWith3 = sim;
+    const value = subset.reduce((sum, project) => sum + project.value, 0);
+    if (value > best.value) {
+      best = { value, subset };
     }
   }
-  return { items, similarityThreshold: Number(maxSimWith3.toFixed(4)) };
+
+  return { items, similarityThreshold: threshold, optimalSubset: best };
 };
 
 const findOptimalSubset = (items, threshold) => {
