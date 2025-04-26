@@ -6,9 +6,10 @@
 node -v
 If you also get "not recognized," then Node.js is not installed. Then, go to https://nodejs.org/. Download and install the latest LTS (Long Term Support) version. During installation, make sure the option 'Add to PATH' is checked — this lets you use node and npm directly in CMD. After installation run these:
 
+```
 node -v
 npm -v
-
+```
 
 
 
