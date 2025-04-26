@@ -19,7 +19,6 @@ To build for deployment:
 cd C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
 npm install    # Install dependencies
 npm run build  # Build your app
-xcopy /E /I /Y "C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies\dist" "C:\Users\LENOVO\Dropbox\Others\GitHub\konstantinosStouras.github.io\lab\knapsack-with-dependencies"
 ```
 
 Then copy the `dist` folder to your GitHub Pages target:
