@@ -36,7 +36,7 @@ xcopy /E /I /Y "C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
 ## Google Apps Script Setup
 
 Paste the below script into a Google Apps Script project and deploy it as a Web App.
-```
+```bash
 function doPost(e) {
   try {
     const sheet = SpreadsheetApp.openById("SHEET_ID_HERE").getSheetByName("Sheet1");
