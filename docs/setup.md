@@ -1,24 +1,29 @@
 # ⚙️ Setup Instructions
 
 ## Run Locally
-
-(Assuming Node.js is installed the following would work. Else, run 
+First, navigate to the folder where your React app (or project files) live:
+```
+cd C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
+```
+(Assuming Node.js is installed the following would work. To be sure, run 
+```
 node -v
-If you also get "not recognized," then Node.js is not installed. Then, go to https://nodejs.org/. Download and install the latest LTS (Long Term Support) version. During installation, make sure the option 'Add to PATH' is checked — this lets you use node and npm directly in CMD. After installation run these:
+```
+If you get "not recognized," then Node.js is not installed. Then, go to https://nodejs.org/. Download and install the latest LTS (Long Term Support) version. During installation, make sure the option 'Add to PATH' is checked — this lets you use node and npm directly in CMD. After installation run these:
 
 ```
 node -v
 npm -v
 ```
 
-
+Install NPM:
 
 ```
-
+npm install    # Install dependencies
+```
 To build for deployment:
 
-cd C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
-npm install    # Install dependencies
+```
 npm run build  # Build your app
 ```
 
@@ -34,7 +39,7 @@ Paste the below script into a Google Apps Script project and deploy it as a Web 
 
 function doPost(e) {
   try {
-    const sheet = SpreadsheetApp.openById("1Z8EwDZoTcq4SUDlBMGGrjff-p_fg9XUckVTcswHMjHA").getSheetByName("Sheet1");
+    const sheet = SpreadsheetApp.openById("SHEET_ID_HERE").getSheetByName("Sheet1");
     const data = JSON.parse(e.postData.contents);
 
     const row = [
