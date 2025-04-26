@@ -2,17 +2,24 @@
 
 ## Run Locally
 
-cd C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
-npm install
-npm run dev
-xcopy /E /I /Y "C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies\dist" "C:\Users\LENOVO\Dropbox\Others\GitHub\konstantinosStouras.github.io\lab\knapsack-with-dependencies"
+(Assuming Node.js is installed the following would work. Else, run 
+node -v
+If you also get "not recognized," then Node.js is not installed. Then, go to https://nodejs.org/. Download and install the latest LTS (Long Term Support) version. During installation, make sure the option 'Add to PATH' is checked — this lets you use node and npm directly in CMD. After installation run these:
+
+node -v
+npm -v
+
+
+
 
 ```
 
 To build for deployment:
 
-```bash
-npm run build
+cd C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
+npm install    # Install dependencies
+npm run build  # Build your app
+xcopy /E /I /Y "C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies\dist" "C:\Users\LENOVO\Dropbox\Others\GitHub\konstantinosStouras.github.io\lab\knapsack-with-dependencies"
 ```
 
 Then copy the `dist` folder to your GitHub Pages target:
