@@ -241,7 +241,7 @@ const nextRound = () => {
   setSelectedIds([]);
   setOptimalIds([]);
   setOptimalStats(null);
-  setStrategyLog([]); // clear after saving
+  setStrategyLog([]); // clear data after saving
 };
 
 const quitGame = () => {
