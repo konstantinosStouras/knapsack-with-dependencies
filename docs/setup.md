@@ -3,7 +3,7 @@
 ## Run Locally
 First, navigate to the folder where your React app (or project files) live:
 ```
-cd C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
+cd C:\Users\User\Dropbox\Others\GitHub\knapsack-with-dependencies
 ```
 (Assuming Node.js is installed the following would work. To be sure, run 
 ```
