@@ -1,22 +1,32 @@
 export default async function handler(req, res) {
-  // 💡✅ Always set CORS headers for all requests (not just OPTIONS)
-  res.setHeader("Access-Control-Allow-Origin", "https://www.stouras.com"); // ← I had '*' earlier but this is safer
+  // CORS — echo back the request’s Origin (if you trust it), rather than hard-coding
+  const allowedOrigins = ["https://www.stouras.com"];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+
+  // Always allow these methods and headers
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // 💡✅ Handle CORS preflight (OPTIONS request)
+  // Fast preflight response
   if (req.method === "OPTIONS") {
-    return res.status(200).end();
+    return res.status(204).end(); // 204 No Content is semantically a bit cleaner
   }
 
-  // Same as before: reject anything that's not POST
+  // Only POST requests
   if (req.method !== "POST") {
+    res.setHeader("Allow", "POST, OPTIONS");
     return res.status(405).send("Method Not Allowed");
   }
 
   try {
-    const appsScriptUrl = "https://script.google.com/macros/s/AKfycbzISNO3suw3qyjXQKd6pxDYWHqCrFMLGhY6wqhmX3g9JGy1jtv7Q9KPCEvgRjyZmrui/exec";
+    const appsScriptUrl =
+      "https://script.google.com/macros/s/AKfycbzISNO3suw3qyjXQKd6pxDYWHqCrFMLGhY6wqhmX3g9JGy1jtv7Q9KPCEvgRjyZmrui/exec";
 
+    // Proxy the request, forwarding any status text or body
     const response = await fetch(appsScriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -24,10 +34,12 @@ export default async function handler(req, res) {
     });
 
     const text = await response.text();
-    return res.status(200).send(text);
+    res
+      .status(response.status)       // mirror the Apps Script’s status code
+      .setHeader("Content-Type", response.headers.get("content-type") || "text/plain")
+      .send(text);
   } catch (err) {
     console.error("Proxy error:", err);
-    return res.status(500).send("Proxy error: " + err.message);
+    res.status(502).send("Bad Gateway: " + err.message);
   }
 }
-//test
