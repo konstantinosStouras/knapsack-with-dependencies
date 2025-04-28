@@ -30,7 +30,7 @@ npm run build  # Build your app
 Then copy the `dist` folder to your GitHub Pages target:
 
 ```bash
-xcopy /E /I /Y "C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies\dist" "C:\Users\LENOVO\Dropbox\Others\GitHub\konstantinosStouras.github.io\lab\knapsack-with-dependencies"
+xcopy /E /I /Y "C:\Users\User\Dropbox\Others\GitHub\knapsack-with-dependencies\dist" "C:\Users\User\Dropbox\Others\GitHub\konstantinosStouras.github.io\lab\knapsack-with-dependencies"
 ```
 
 ## Google Apps Script Setup
