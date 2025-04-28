@@ -157,7 +157,7 @@ const formatDateToUKTime = (dateString) => {
 };
 
 
-// Reset user and session ID on app load
+// Reset user and session ID on app load 
 sessionStorage.removeItem('sessionId');
 sessionStorage.removeItem('userId');
 
