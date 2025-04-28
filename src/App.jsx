@@ -97,6 +97,8 @@ export default function CosineKnapsackGame() {
   const [history, setHistory] = useState([]);
   const [quit, setQuit] = useState(false);
   const [strategyLog, setStrategyLog] = useState([]);
+  const [fullGameLog, setFullGameLog] = useState([]); // Required for full session tracking
+
 
   const selectedItems = items.filter((project) => selectedIds.includes(project.id));
   const totalValue = selectedItems.reduce((sum, project) => sum + project.value, 0);
@@ -229,13 +231,17 @@ const nextRound = () => {
   }
 
   setHistory((prev) => [...prev, { round, success }]);
+  
+  // Save round strategy into full session log
+  setFullGameLog(prev => [...prev, { round, strategyLog }]);
+  
   setRound((prev) => prev + 1);
   const newRound = generateItemsAndThreshold();
   setRoundData(newRound);
   setSelectedIds([]);
   setOptimalIds([]);
   setOptimalStats(null);
-  setStrategyLog([]);
+  setStrategyLog([]); // clear after saving
 };
 
 const quitGame = () => {
@@ -258,6 +264,10 @@ const quitGame = () => {
   }
 
   setHistory((prev) => [...prev, { round, success }]);
+  
+  // Save final round's strategy into full session log
+  setFullGameLog(prev => [...prev, { round, strategyLog }]);
+  
   setQuit(true);
   setRound(prev => prev + 1);
 };
