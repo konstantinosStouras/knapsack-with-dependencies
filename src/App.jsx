@@ -233,7 +233,7 @@ const nextRound = () => {
   setHistory((prev) => [...prev, { round, success }]);
   
   // Save round strategy into full session log
-  setFullGameLog(prev => [...prev, { round, strategyLog }]);
+  //setFullGameLog(prev => [...prev, { round, strategyLog }]);
   
   setRound((prev) => prev + 1);
   const newRound = generateItemsAndThreshold();
@@ -266,7 +266,7 @@ const quitGame = () => {
   setHistory((prev) => [...prev, { round, success }]);
   
   // Save final round's strategy into full session log
-  setFullGameLog(prev => [...prev, { round, strategyLog }]);
+  //setFullGameLog(prev => [...prev, { round, strategyLog }]);
   
   setQuit(true);
   setRound(prev => prev + 1);
