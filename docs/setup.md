@@ -1,18 +1,30 @@
 # ⚙️ Setup Instructions
 
 ## Run Locally
-
+First, navigate to the folder where your React app (or project files) live:
+```
 cd C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
-npm install
-npm run dev
-xcopy /E /I /Y "C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies\dist" "C:\Users\LENOVO\Dropbox\Others\GitHub\konstantinosStouras.github.io\lab\knapsack-with-dependencies"
+```
+(Assuming Node.js is installed the following would work. To be sure, run 
+```
+node -v
+```
+If you get "not recognized," then Node.js is not installed. Then, go to https://nodejs.org/. Download and install the latest LTS (Long Term Support) version. During installation, make sure the option 'Add to PATH' is checked — this lets you use node and npm directly in CMD. After installation run these:
 
 ```
+node -v
+npm -v
+```
 
+Install NPM:
+
+```
+npm install    # Install dependencies
+```
 To build for deployment:
 
-```bash
-npm run build
+```
+npm run build  # Build your app
 ```
 
 Then copy the `dist` folder to your GitHub Pages target:
@@ -24,10 +36,10 @@ xcopy /E /I /Y "C:\Users\LENOVO\Dropbox\Others\GitHub\knapsack-with-dependencies
 ## Google Apps Script Setup
 
 Paste the below script into a Google Apps Script project and deploy it as a Web App.
-
+```bash
 function doPost(e) {
   try {
-    const sheet = SpreadsheetApp.openById("1Z8EwDZoTcq4SUDlBMGGrjff-p_fg9XUckVTcswHMjHA").getSheetByName("Sheet1");
+    const sheet = SpreadsheetApp.openById("SHEET_ID_HERE").getSheetByName("Sheet1");
     const data = JSON.parse(e.postData.contents);
 
     const row = [
@@ -76,4 +88,5 @@ function doPost(e) {
       .setHeader("Access-Control-Allow-Headers", "Content-Type");
   }
 }
+```
 
