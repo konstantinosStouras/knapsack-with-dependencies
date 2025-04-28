@@ -107,7 +107,7 @@ export default function CosineKnapsackGame() {
     setSelectedIds((prev) => {
       const updated = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       const project = items.find(it => it.id === id);
-      setStrategyLog(log => [...log, `${project.name} ${prev.includes(id) ? 'removed' : 'selected'}`]);
+      setStrategyLog(log => [...log, `${project.name} ${prev.includes(id) ? 'removed' : 'added'}`]);
       return updated;
     });
   };
@@ -175,7 +175,7 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
   const optimalStats = optimalStatsRaw || findOptimalSubset(items, similarityThreshold);
   const optimalSimilarity = averageSimilarity(optimalStats.subset);
 
-  const strategyLog = selectedItems.map(item => item.name);
+  const strategyLog = strategyLogRaw || [];
 
   // Collect project-level details
   const itemData = items.flatMap((item, idx) => {
