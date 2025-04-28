@@ -125,6 +125,38 @@ const getDeviceType = () => {
   return /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop";
 };
 
+// This function takes a UTC date and formats it nicely in UK timezone
+
+const formatDateToUKTime = (dateString) => {
+  const date = new Date(dateString);
+  const options = {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'long',
+    timeZone: 'Europe/London',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  };
+  const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(date);
+  const lookup = {};
+  parts.forEach(({ type, value }) => {
+    lookup[type] = value;
+  });
+
+  const time = date.toLocaleTimeString('en-GB', {
+    timeZone: 'Europe/London',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+
+  return `${lookup.weekday}, ${lookup.day} ${lookup.month} ${time} UK time`;
+};
+
+
 // Reset user and session ID on app load
 sessionStorage.removeItem('sessionId');
 sessionStorage.removeItem('userId');
@@ -157,7 +189,8 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
   const itemLog = itemData.reduce((acc, val) => ({ ...acc, ...val }), {});
 
   return {
-    timestamp: new Date().toISOString(),
+    // timestamp: new Date().toISOString(),
+	timestamp: formatDateToUKTime(new Date().toISOString()),
     userId,
     sessionId,
     browser: getBrowserInfo(),
