@@ -162,6 +162,8 @@ const formatDateToUKTime = (dateString) => {
 
 
 // Reset user and session ID on app load 
+// That’s good if you always want fresh IDs per page reload. 
+// But if in the future you want users to play multiple sessions without losing session tracking, you would remove that reset. (Just an idea.)
 sessionStorage.removeItem('sessionId');
 sessionStorage.removeItem('userId');
 
@@ -273,8 +275,6 @@ const quitGame = () => {
   setQuit(true);
   setRound(prev => prev + 1);
 };
-
-
 
   const [showOptimalView, setShowOptimalView] = useState(false);
 
