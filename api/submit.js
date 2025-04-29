@@ -1,31 +1,22 @@
 export default async function handler(req, res) {
-  // CORS — echo back the request’s Origin (if you trust it)
-  const allowedOrigins = ["https://www.stouras.com"];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
-
-  // Always allow these methods and headers
+  // 💡✅ Always set CORS headers for all requests (not just OPTIONS)
+  res.setHeader("Access-Control-Allow-Origin", "https://www.stouras.com"); // ← I had '*' earlier but this is safer
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Fast preflight response
+  // 💡✅ Handle CORS preflight (OPTIONS request)
   if (req.method === "OPTIONS") {
-    return res.status(204).end(); // 204 No Content
+    return res.status(200).end();
   }
 
-  // Only POST requests
+  // Same as before: reject anything that's not POST
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST, OPTIONS");
     return res.status(405).send("Method Not Allowed");
   }
 
   try {
     const appsScriptUrl = "https://script.google.com/macros/s/AKfycbzt0QfH5DPMoeaeaNRjZH9a4t673MS5vDOC91jK3vFTPUTtiKrewl_DbBg3QIotirmY/exec";
 
-    // Proxy the request, forwarding any status text or body
     const response = await fetch(appsScriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -33,12 +24,10 @@ export default async function handler(req, res) {
     });
 
     const text = await response.text();
-    res
-      .status(response.status) // mirror the Apps Script’s status code
-      .setHeader("Content-Type", response.headers.get("content-type") || "text/plain")
-      .send(text);
+    return res.status(200).send(text);
   } catch (err) {
     console.error("Proxy error:", err);
-    res.status(502).send("Bad Gateway: " + err.message);
+    return res.status(500).send("Proxy error: " + err.message);
   }
 }
+//test
