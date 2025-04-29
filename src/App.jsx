@@ -364,15 +364,16 @@ return (
       <div className="row g-3">
         {items.map((project) => (
           <div key={project.id} className="col-md-6">
-            <div
-              className={`card p-3 cursor-pointer ${selectedIds.includes(project.id) ? 'border-primary border-2' : ''}`}
-              onClick={() => toggleItem(project.id)}
-            >
-              <div className="card-body">
-                <h5 className="card-title">{project.name}</h5>
-                <p className="card-text">Value: {project.value}</p>
-              </div>
-            </div>
+            <div className={`card p-3 ${selectedIds.includes(project.id) ? 'border-primary border-2' : ''}`}>
+  <div
+    className="card-body cursor-pointer"
+    onClick={() => toggleItem(project.id)}
+  >
+    <h5 className="card-title">{project.name}</h5>
+    <p className="card-text">Value: {project.value}</p>
+  </div>
+</div>
+
           </div>
         ))}
       </div>
