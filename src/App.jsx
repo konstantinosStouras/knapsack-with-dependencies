@@ -56,15 +56,23 @@ const generateItemsAndThreshold = () => {
       attributes: isSimilar && i === Math.min(...similarIndices) ? baseVector : vector,
     };
   });
-  const subsets = getAllSubsets(items);
-  let maxSimWith3 = 0;
+
+//Make sure that for each round the Target Portfolio Compatibility Score is always a random number between [0.88, 0.98]. 
+// This makes the optimal subset to have fewer items and always between 2-5 items (as opposed to all of them being the optimal)
+  const threshold = parseFloat((Math.random() * 0.1 + 0.88).toFixed(4));
+  const subsets = getAllSubsets(items).filter(sub =>
+    sub.length >= 2 && sub.length <= 5 && averageSimilarity(sub) >= threshold
+  );
+
+  let best = { value: 0, subset: [] };
   for (const subset of subsets) {
-    if (subset.length === 3) {
-      const sim = averageSimilarity(subset);
-      if (sim > maxSimWith3) maxSimWith3 = sim;
+    const value = subset.reduce((sum, project) => sum + project.value, 0);
+    if (value > best.value) {
+      best = { value, subset };
     }
   }
-  return { items, similarityThreshold: Number(maxSimWith3.toFixed(4)) };
+
+  return { items, similarityThreshold: threshold, optimalSubset: best };
 };
 
 const findOptimalSubset = (items, threshold) => {
@@ -89,6 +97,8 @@ export default function CosineKnapsackGame() {
   const [history, setHistory] = useState([]);
   const [quit, setQuit] = useState(false);
   const [strategyLog, setStrategyLog] = useState([]);
+  const [fullGameLog, setFullGameLog] = useState([]); // Required for full session tracking
+
 
   const selectedItems = items.filter((project) => selectedIds.includes(project.id));
   const totalValue = selectedItems.reduce((sum, project) => sum + project.value, 0);
@@ -99,12 +109,61 @@ export default function CosineKnapsackGame() {
     setSelectedIds((prev) => {
       const updated = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       const project = items.find(it => it.id === id);
-      setStrategyLog(log => [...log, `${project.name} ${prev.includes(id) ? 'removed' : 'selected'}`]);
+      setStrategyLog(log => [...log, `${project.name} ${prev.includes(id) ? 'removed' : 'added'}`]);
       return updated;
     });
   };
 
-const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLog, optimalStats) => {
+const getBrowserInfo = () => {
+  const ua = navigator.userAgent;
+  const match = ua.match(/(Chrome|Firefox|Safari|Edg|OPR|Trident)\/(\d+\.\d+)/);
+  return match ? `${match[1]} ${match[2]}` : "Unknown Browser";
+};
+
+const getDeviceType = () => {
+  if (typeof navigator.userAgentData !== "undefined") {
+    return navigator.userAgentData.mobile ? "Mobile" : "Desktop";
+  }
+  return /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop";
+};
+
+// This function takes a UTC date and formats it nicely in UK timezone
+
+const formatDateToUKTime = (dateString) => {
+  const date = new Date(dateString);
+  const options = {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'long',
+    timeZone: 'Europe/London',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  };
+  const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(date);
+  const lookup = {};
+  parts.forEach(({ type, value }) => {
+    lookup[type] = value;
+  });
+
+  const time = date.toLocaleTimeString('en-GB', {
+    timeZone: 'Europe/London',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+
+  return `${lookup.weekday}, ${lookup.day} ${lookup.month} ${time} UK time`;
+};
+
+
+// Reset user and session ID on app load 
+sessionStorage.removeItem('sessionId');
+sessionStorage.removeItem('userId');
+
+const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLogRaw, optimalStatsRaw) => {
   const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
   const userId = sessionStorage.getItem('userId') || crypto.randomUUID();
   sessionStorage.setItem('sessionId', sessionId);
@@ -115,27 +174,46 @@ const generateLogData = (round, items, selectedIds, similarityThreshold, strateg
   const similarity = averageSimilarity(selectedItems);
   const success = similarity >= similarityThreshold;
 
+  const optimalStats = optimalStatsRaw || findOptimalSubset(items, similarityThreshold);
+  const optimalSimilarity = averageSimilarity(optimalStats.subset);
+
+  const strategyLog = strategyLogRaw || [];
+
+  // Collect project-level details
+  const itemData = items.flatMap((item, idx) => {
+    return {
+      [`Project ${idx + 1} Value`]: item.value,
+      [`Project ${idx + 1} Attributes`]: `[${item.attributes.map(v => v.toFixed(2)).join(', ')}]`,
+      [`Project ${idx + 1} Selected`]: selectedIds.includes(item.id) ? 'Yes' : 'No'
+    };
+  });
+
+  const itemLog = itemData.reduce((acc, val) => ({ ...acc, ...val }), {});
+
   return {
-    timestamp: new Date().toISOString(),
+    // timestamp: new Date().toISOString(),
+	timestamp: formatDateToUKTime(new Date().toISOString()),
     userId,
     sessionId,
-    browser: navigator.userAgent || '',
-    device: navigator.platform || '',
+    browser: getBrowserInfo(),
+    device: getDeviceType(),
     round,
     totalValue,
     similarity: similarity.toFixed(4),
     targetSimilarity: similarityThreshold,
     success,
-    strategy: strategyLog.join(" | "),
-    finalSelection: JSON.stringify(selectedIds),
-    optimalSet: JSON.stringify(optimalStats?.items?.map(i => i.id) || []),
-    optimalValue: optimalStats?.value ?? '',
-    optimalSimilarity: optimalStats?.similarity?.toFixed(4) ?? ''
+    strategy: strategyLog.join(", "),
+    finalSelection: selectedItems.map(item => item.name).join(", "),
+    optimalSet: optimalStats.subset.map(item => item.name).join(", "),
+    optimalValue: optimalStats.value.toString(),
+    optimalSimilarity: optimalSimilarity.toFixed(4),
+    ...itemLog
   };
 };
 
 const nextRound = () => {
-  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimalStats);
+  const optimal = findOptimalSubset(items, similarityThreshold);
+  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimal);
   try {
     fetch('https://knapsack-with-dependencies.vercel.app/api/submit', {
       method: 'POST',
@@ -153,17 +231,22 @@ const nextRound = () => {
   }
 
   setHistory((prev) => [...prev, { round, success }]);
+  
+  // Save round strategy into full session log
+  //setFullGameLog(prev => [...prev, { round, strategyLog }]);
+  
   setRound((prev) => prev + 1);
   const newRound = generateItemsAndThreshold();
   setRoundData(newRound);
   setSelectedIds([]);
   setOptimalIds([]);
   setOptimalStats(null);
-  setStrategyLog([]);
+  setStrategyLog([]); // clear data after saving
 };
 
 const quitGame = () => {
-  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimalStats);
+  const optimal = findOptimalSubset(items, similarityThreshold);
+  const logData = generateLogData(round, items, selectedIds, similarityThreshold, strategyLog, optimal);
   try {
     fetch('https://knapsack-with-dependencies.vercel.app/api/submit', {
       method: 'POST',
@@ -181,33 +264,46 @@ const quitGame = () => {
   }
 
   setHistory((prev) => [...prev, { round, success }]);
+  
+  // Save final round's strategy into full session log
+  //setFullGameLog(prev => [...prev, { round, strategyLog }]);
+  
   setQuit(true);
   setRound(prev => prev + 1);
 };
 
 
 
-  const showOptimal = () => {
-    const result = findOptimalSubset(items, similarityThreshold);
-    const ids = result.subset.map((project) => project.id);
-    setOptimalIds(ids);
-    setSelectedIds(ids);
-    const allSubsets = getAllSubsets(items)
-      .filter(sub => sub.length >= 2)
-      .map(subset => ({
-        names: subset.map(project => project.name).join(', '),
-        value: subset.reduce((sum, project) => sum + project.value, 0),
-        similarity: averageSimilarity(subset),
-        valid: averageSimilarity(subset) >= similarityThreshold
-      }))
-      .sort((a, b) => b.value - a.value);
+  const [showOptimalView, setShowOptimalView] = useState(false);
 
-    setOptimalStats({
-      value: result.value,
-      similarity: averageSimilarity(result.subset),
-      items: result.subset,
-      allSubsets
-    });
+  const showOptimal = () => {
+    if (showOptimalView) {
+      setOptimalIds([]);
+      setSelectedIds(prev => prev.filter(id => !optimalIds.includes(id)));
+      setOptimalStats(null);
+    } else {
+      const result = findOptimalSubset(items, similarityThreshold);
+      const ids = result.subset.map((project) => project.id);
+      setOptimalIds(ids);
+      setSelectedIds(ids);
+      const allSubsets = getAllSubsets(items)
+        .filter(sub => sub.length >= 2)
+        .map(subset => ({
+          names: subset.map(project => project.name).join(', '),
+          value: subset.reduce((sum, project) => sum + project.value, 0),
+          similarity: averageSimilarity(subset),
+          valid: averageSimilarity(subset) >= similarityThreshold
+        }))
+        .sort((a, b) => b.value - a.value);
+
+      setOptimalStats({
+        value: result.value,
+        similarity: averageSimilarity(result.subset),
+        items: result.subset,
+        allSubsets
+      });
+    }
+    setShowOptimalView(!showOptimalView);
   };
 
   if (quit) {
@@ -259,7 +355,7 @@ return (
       <h1 className="text-center h1 text-primary mb-4">Project Selection with Dependencies</h1>
       <h2 className="h4">Round {round}</h2>
       <p>
-        Select a portfolio of items that maximizes total value,<br />
+        Select a portfolio of projects that maximizes total value,<br />
         subject to: Portfolio Compatibility Score ≥ {similarityThreshold} (range: -1 to 1)
       </p>
 
