@@ -97,7 +97,7 @@ export default function CosineKnapsackGame() {
   const [history, setHistory] = useState([]);
   const [quit, setQuit] = useState(false);
   const [strategyLog, setStrategyLog] = useState([]);
-  const [fullGameLog, setFullGameLog] = useState([]); // Required for full session tracking
+  //const [fullGameLog, setFullGameLog] = useState([]); // Required for full session tracking
 
 
   const selectedItems = items.filter((project) => selectedIds.includes(project.id));
