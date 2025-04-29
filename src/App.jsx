@@ -337,6 +337,13 @@ const quitGame = () => {
       <button
         className="btn btn-dark mt-3"
         onClick={() => {
+          sessionStorage.removeItem('sessionId');
+          sessionStorage.removeItem('userId');
+          setSelectedIds([]);
+          setOptimalIds([]);
+          setOptimalStats(null);
+          setStrategyLog([]);
+          sessionStorage.removeItem('userId');
           setRound(1);
           setSelectedIds([]);
           setOptimalIds([]);
@@ -364,7 +371,7 @@ return (
       <div className="row g-3">
         {items.map((project) => (
           <div key={project.id} className="col-md-6">
-            <div className={`card p-3 ${selectedIds.includes(project.id) ? 'border-primary border-2' : ''}`}>
+<div className={`card p-3 ${selectedIds.includes(project.id) ? 'border-primary border-2' : ''}`}>
   <div
     className="card-body cursor-pointer"
     onClick={() => toggleItem(project.id)}
