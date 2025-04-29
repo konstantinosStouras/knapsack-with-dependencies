@@ -106,13 +106,15 @@ export default function CosineKnapsackGame() {
   const success = similarity >= similarityThreshold;
 
   const toggleItem = (id) => {
-    setSelectedIds((prev) => {
-      const updated = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      const project = items.find(it => it.id === id);
-      setStrategyLog(log => [...log, `${project.name} ${prev.includes(id) ? 'removed' : 'added'}`]);
-      return updated;
-    });
-  };
+  setSelectedIds((prev) => {
+    const isAlreadySelected = prev.includes(id);
+    const updated = isAlreadySelected ? prev.filter((x) => x !== id) : [...prev, id];
+    const project = items.find(it => it.id === id);
+    setStrategyLog(log => [...log, `${project.name} ${isAlreadySelected ? 'removed' : 'added'}`]);
+    return updated;
+  });
+};
+
 
 const getBrowserInfo = () => {
   const ua = navigator.userAgent;
