@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const NUM_ITEMS = 6;
@@ -13,6 +13,8 @@ const cosineSimilarity = (a, b) => {
   const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
   const magA = Math.sqrt(a.reduce((sum, val) => sum + val ** 2, 0));
   const magB = Math.sqrt(b.reduce((sum, val) => sum + val ** 2, 0));
+  // Guard against zero-magnitude vectors (would otherwise yield NaN)
+  if (magA === 0 || magB === 0) return 0;
   return dot / (magA * magB);
 };
 
@@ -161,11 +163,15 @@ const formatDateToUKTime = (dateString) => {
 };
 
 
-// Reset user and session ID on app load 
-// That’s good if you always want fresh IDs per page reload. 
-// But if in the future you want users to play multiple sessions without losing session tracking, you would remove that reset. (Just an idea.)
-sessionStorage.removeItem('sessionId');
-sessionStorage.removeItem('userId');
+// Reset user and session ID once, on app load (fresh IDs per page reload).
+// IMPORTANT: this must run only on mount. Previously these calls sat directly
+// in the component body, so they executed on EVERY render — which wiped the
+// stored IDs between rounds and caused generateLogData to mint a brand-new
+// userId/sessionId for every single round, breaking per-session tracking.
+useEffect(() => {
+  sessionStorage.removeItem('sessionId');
+  sessionStorage.removeItem('userId');
+}, []);
 
 const generateLogData = (round, items, selectedIds, similarityThreshold, strategyLogRaw, optimalStatsRaw) => {
   const sessionId = sessionStorage.getItem('sessionId') || crypto.randomUUID();
@@ -245,6 +251,7 @@ const nextRound = () => {
   setSelectedIds([]);
   setOptimalIds([]);
   setOptimalStats(null);
+  setShowOptimalView(false); // collapse the optimal reveal for the new round
   setStrategyLog([]); // clear data after saving
 };
 
@@ -281,13 +288,17 @@ const quitGame = () => {
   const showOptimal = () => {
     if (showOptimalView) {
       setOptimalIds([]);
-      setSelectedIds(prev => prev.filter(id => !optimalIds.includes(id)));
       setOptimalStats(null);
     } else {
       const result = findOptimalSubset(items, similarityThreshold);
       const ids = result.subset.map((project) => project.id);
       setOptimalIds(ids);
-      setSelectedIds(ids);
+      // NOTE: deliberately do NOT call setSelectedIds(ids) here. Previously
+      // revealing the optimal set overwrote the player's own selection, so if
+      // they then hit "Next Round" or "Quit" the OPTIMAL subset was logged as
+      // their final answer instead of what they actually picked. The optimal
+      // set is now shown separately (badge + "Optimal Subset" card) and the
+      // player's selection is left untouched.
       const allSubsets = getAllSubsets(items)
         .filter(sub => sub.length >= 2)
         .map(subset => ({
@@ -339,15 +350,12 @@ const quitGame = () => {
         onClick={() => {
           sessionStorage.removeItem('sessionId');
           sessionStorage.removeItem('userId');
-          setSelectedIds([]);
-          setOptimalIds([]);
-          setOptimalStats(null);
-          setStrategyLog([]);
-          sessionStorage.removeItem('userId');
           setRound(1);
           setSelectedIds([]);
           setOptimalIds([]);
           setOptimalStats(null);
+          setShowOptimalView(false);
+          setStrategyLog([]);
           setHistory([]);
           setRoundData(generateItemsAndThreshold());
           setQuit(false);
@@ -365,7 +373,7 @@ return (
       <h2 className="h4">Round {round}</h2>
       <p>
         Select a portfolio of projects that maximizes total value,<br />
-        subject to: Portfolio Compatibility Score ≥ {similarityThreshold} (range: -1 to 1)
+        subject to: Portfolio Compatibility Score ≥ {similarityThreshold} (range: 0 to 1)
       </p>
 
       <div className="row g-3">
@@ -378,6 +386,9 @@ return (
   >
     <h5 className="card-title">{project.name}</h5>
     <p className="card-text">Value: {project.value}</p>
+    {optimalIds.includes(project.id) && (
+      <span className="badge bg-success">In optimal set</span>
+    )}
   </div>
 </div>
 
@@ -436,7 +447,7 @@ return (
 
     <div className="card mt-4">
       <div className="card-body">
-        <h3 className="h6 mb-3">All Valid Subsets (2+ items)</h3>
+        <h3 className="h6 mb-3">All Subsets (2+ items) — ✅ valid · ❌ invalid</h3>
         <div className="row g-3">
           {optimalStats.allSubsets.map((sub, idx) => (
             <div key={idx} className="col-md-6">
